@@ -5,5 +5,7 @@
 要修改可按 menu 键弹出重新设置
 2. 暂时没有搜索功能
 3. 当贝盒子测试可用
+
+
 下载地址：
 https://github.com/zqq5054/xiaya/blob/master/app/release/app-release.apk
