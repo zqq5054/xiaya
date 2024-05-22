@@ -65,7 +65,7 @@ public class PlayerActivity extends Activity {
                 case KeyEvent.KEYCODE_DPAD_UP:
                     speedPos++;
                     videoView.setSpeed(speed[speedPos%speed.length]);
-                    Toast.makeText(PlayerActivity.this,"倍数："+speed[speedPos%speed.length],Toast.LENGTH_SHORT).show();
+                    Toast.makeText(PlayerActivity.this,"倍速："+speed[speedPos%speed.length],Toast.LENGTH_SHORT).show();
                     return true;
                 case KeyEvent.KEYCODE_DPAD_DOWN:
                     break;
