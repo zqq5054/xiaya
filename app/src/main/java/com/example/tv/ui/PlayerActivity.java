@@ -49,12 +49,12 @@ public class PlayerActivity extends Activity implements Runnable {
     private JSONArray array;
     private String path;
     private int currentPos = 0;
-
+    private String url;
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         System.out.println("new PlayerActivity created");
         super.onCreate(savedInstanceState);
-        String url = getIntent().getStringExtra("url");
+        url = getIntent().getStringExtra("url");
         path = getIntent().getStringExtra("path");
         String list = getIntent().getStringExtra("list");
         final String name = getIntent().getStringExtra("name");
@@ -180,9 +180,11 @@ public class PlayerActivity extends Activity implements Runnable {
                 // 用户选择的内容
                 String selectedResolution = resolutionOptions[which];
                 String playUrl = videoTransCoding.get(selectedResolution);
-                videoView.release();
-                videoView.setUrl(playUrl);
-                videoView.start();
+                if(!playUrl.equals(PlayerActivity.this.url)) {
+                    videoView.release();
+                    videoView.setUrl(playUrl);
+                    videoView.start();
+                }
 
             }
         });
