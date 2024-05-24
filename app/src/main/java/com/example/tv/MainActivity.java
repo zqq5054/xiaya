@@ -57,9 +57,7 @@ public class MainActivity extends AppCompatActivity implements Runnable {
     String name = "";
     private View pb;
     private int selectedPosition = -1;
-
-    private int firstVisibleItemPosition;
-    private int recyclerViewHeight;
+    private String cacheJson;
     private boolean isScrolling = false;
 
     @Override
@@ -92,6 +90,14 @@ public class MainActivity extends AppCompatActivity implements Runnable {
             showDialog();
         } else {
             url = domain + url;
+            cacheJson = data.getString(name,"");
+            if(!TextUtils.isEmpty(cacheJson)){
+                try {
+                    setList(new JSONObject(cacheJson));
+                }catch (JSONException e){
+                    e.printStackTrace();
+                }
+            }
             new Thread(this).start();
         }
 
@@ -176,7 +182,7 @@ public class MainActivity extends AppCompatActivity implements Runnable {
             requestBody.put("path", path);
             requestBody.put("password", "");
             requestBody.put("page", 1);
-            requestBody.put("per_page", 1300);
+            requestBody.put("per_page", 13000);
             requestBody.put("refresh", false);
         } catch (JSONException e) {
             e.printStackTrace();
@@ -203,19 +209,17 @@ public class MainActivity extends AppCompatActivity implements Runnable {
                     try {
                         String responseBody = response.body().string();
                         System.out.println(responseBody);
+
                         JSONObject jsonObject = new JSONObject(responseBody);
                         int code = jsonObject.getInt("code");
                         String message = jsonObject.getString("message");
                         if (code == 200) {
-                            JSONArray contentArray = jsonObject.getJSONObject("data").getJSONArray("content");
-                            for (int i = 0; i < contentArray.length(); i++) {
-                                JSONObject itemObject = contentArray.getJSONObject(i);
-                                itemList.add(itemObject);
+                            if(!responseBody.equals(cacheJson)){
+                                SharedPreferences data = getSharedPreferences("data", 0);
+                                data.edit().putString(name, responseBody).commit();
+                                setList(jsonObject);
                             }
-                            runOnUiThread(() -> {
-                                adapter.notifyDataSetChanged();
-                                pb.setVisibility(View.GONE);
-                            });
+
                         } else {
 
                             runOnUiThread(() -> {
@@ -237,6 +241,24 @@ public class MainActivity extends AppCompatActivity implements Runnable {
                     Toast.makeText(MainActivity.this, "请求失败", Toast.LENGTH_SHORT).show();
                 }
             }
+        });
+    }
+
+    private void setList(JSONObject jsonObject) throws JSONException {
+        JSONArray contentArray = jsonObject.getJSONObject("data").getJSONArray("content");
+
+        runOnUiThread(() -> {
+            itemList.clear();
+            try {
+                for (int i = 0; i < contentArray.length(); i++) {
+                    JSONObject itemObject = contentArray.getJSONObject(i);
+                    itemList.add(itemObject);
+                }
+            }catch (Exception e){
+                e.printStackTrace();
+            }
+            adapter.notifyDataSetChanged();
+            pb.setVisibility(View.GONE);
         });
     }
 
@@ -377,7 +399,6 @@ public class MainActivity extends AppCompatActivity implements Runnable {
                     try {
 
                         String responseBody = response.body().string();
-                        System.out.println(responseBody);
                         JSONObject jsonObject = new JSONObject(responseBody);
                         int code = jsonObject.getInt("code");
                         String message = jsonObject.getString("message");
@@ -386,6 +407,7 @@ public class MainActivity extends AppCompatActivity implements Runnable {
                             String url = data.getString("raw_url");
                             Intent intent = new Intent(MainActivity.this, PlayerActivity.class);
                             intent.putExtra("url", url);
+                            intent.putExtra("path",path);
                             intent.putExtra("name", name);
                             startActivity(intent);
                         } else {
