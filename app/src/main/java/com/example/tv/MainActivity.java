@@ -168,7 +168,7 @@ public class MainActivity extends AppCompatActivity implements Runnable {
 
     private void sendPostRequest() {
 
-        System.out.println(url);
+
         OkHttpClient client = new OkHttpClient();
 
         JSONObject requestBody = new JSONObject();
@@ -217,6 +217,7 @@ public class MainActivity extends AppCompatActivity implements Runnable {
                             if(!responseBody.equals(cacheJson)){
                                 SharedPreferences data = getSharedPreferences("data", 0);
                                 data.edit().putString(name, responseBody).commit();
+                                cacheJson = responseBody;
                                 setList(jsonObject);
                             }
 
@@ -386,9 +387,8 @@ public class MainActivity extends AppCompatActivity implements Runnable {
             public void onFailure(@NonNull Call call, @NonNull IOException e) {
                 runOnUiThread(() -> {
                     Toast.makeText(MainActivity.this, "请求失败", Toast.LENGTH_SHORT).show();
-                    runOnUiThread(() -> {
+
                         pb.setVisibility(View.GONE);
-                    });
                 });
 
             }
@@ -406,8 +406,9 @@ public class MainActivity extends AppCompatActivity implements Runnable {
                             JSONObject data = jsonObject.getJSONObject("data");
                             String url = data.getString("raw_url");
                             Intent intent = new Intent(MainActivity.this, PlayerActivity.class);
+                            intent.putExtra("list",cacheJson);
                             intent.putExtra("url", url);
-                            intent.putExtra("path",path);
+                            intent.putExtra("path",path.replace("//","/"));
                             intent.putExtra("name", name);
                             startActivity(intent);
                         } else {
