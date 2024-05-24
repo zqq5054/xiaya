@@ -214,7 +214,7 @@ public class PlayerActivity extends Activity implements Runnable{
                                     videoTransCoding.put(template_id,url);
                                 }
                             }
-                            runOnUiThread(()->showResolutionDialog());
+
                         }
                     } catch (JSONException e) {
                         e.printStackTrace();
