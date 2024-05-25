@@ -334,7 +334,7 @@ public class MainActivity extends AppCompatActivity implements Runnable {
                             startActivity(intent);
                         } else {
                             int type = item.getInt("type");
-                            if (type == 2) {
+                            if (type == 2||type == 3) {
                                 runOnUiThread(() -> {
                                     pb.setVisibility(View.VISIBLE);
                                 });
@@ -405,9 +405,11 @@ public class MainActivity extends AppCompatActivity implements Runnable {
                         if (code == 200) {
                             JSONObject data = jsonObject.getJSONObject("data");
                             String url = data.getString("raw_url");
+                            int type = data.getInt("type");
                             Intent intent = new Intent(MainActivity.this, PlayerActivity.class);
-                            intent.putExtra("list",cacheJson);
+                            PlayerActivity.list = cacheJson;
                             intent.putExtra("url", url);
+                            intent.putExtra("type",type);
                             intent.putExtra("path",path.replace("//","/"));
                             intent.putExtra("name", name);
                             startActivity(intent);

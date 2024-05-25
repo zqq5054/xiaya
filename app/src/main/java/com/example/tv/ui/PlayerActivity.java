@@ -50,13 +50,16 @@ public class PlayerActivity extends Activity implements Runnable {
     private String path;
     private int currentPos = 0;
     private String url;
+    public static String list;
+    private int type;
+
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         System.out.println("new PlayerActivity created");
         super.onCreate(savedInstanceState);
         url = getIntent().getStringExtra("url");
         path = getIntent().getStringExtra("path");
-        String list = getIntent().getStringExtra("list");
+        type = getIntent().getIntExtra("type", 2);
         final String name = getIntent().getStringExtra("name");
         if (!TextUtils.isEmpty(list)) {
             try {
@@ -68,9 +71,10 @@ public class PlayerActivity extends Activity implements Runnable {
                     JSONObject item = content.getJSONObject(i);
                     int type = item.getInt("type");
                     String itemName = item.getString("name");
-                    if (type == 2) {
+                    System.out.println(itemName);
+                    if (type == 2 || type == 3) {
                         array.put(item);
-                        if(itemName.equals(name)){
+                        if (itemName.equals(name)) {
                             currentPos = pos;
                         }
                         pos++;
@@ -88,7 +92,9 @@ public class PlayerActivity extends Activity implements Runnable {
         controller.addDefaultControlComponent(name, false);
         videoView.setVideoController(controller); //设置控制器
         videoView.start(); //开始播放，不调用则不自动播放
-        new Thread(this).start();
+        if (type == 2) {
+            new Thread(this).start();
+        }
         videoView.addOnStateChangeListener(new BaseVideoView.OnStateChangeListener() {
             @Override
             public void onPlayerStateChanged(int playerState) {
@@ -100,21 +106,28 @@ public class PlayerActivity extends Activity implements Runnable {
 
                 if (playState == BaseVideoView.STATE_PLAYBACK_COMPLETED) {
                     if (array != null && array.length() != 0) {
-                        try {
-                            currentPos++;
-                            JSONObject item = array.getJSONObject(currentPos);
-                            videoView.release();
-                            Toast.makeText(PlayerActivity.this, "播放" + item.getString("name"), Toast.LENGTH_LONG).show();
-                            path = path.substring(0, path.lastIndexOf("/")) + "/" + item.getString("name");
-                            new Thread(new NextVideo()).start();
-                        } catch (Exception e) {
-                            e.printStackTrace();
-                        }
+                        next();
                     }
+                } else if (playState == BaseVideoView.STATE_ERROR) {
+                    next();
                 }
             }
         });
+    }
 
+    private void next() {
+        currentPos++;
+        if (currentPos < array.length()) {
+            try {
+                JSONObject item = array.getJSONObject(currentPos);
+                videoView.release();
+                Toast.makeText(PlayerActivity.this, "播放" + item.getString("name"), Toast.LENGTH_LONG).show();
+                path = path.substring(0, path.lastIndexOf("/")) + "/" + item.getString("name");
+                new Thread(new NextVideo()).start();
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+        }
     }
 
 
@@ -180,7 +193,7 @@ public class PlayerActivity extends Activity implements Runnable {
                 // 用户选择的内容
                 String selectedResolution = resolutionOptions[which];
                 String playUrl = videoTransCoding.get(selectedResolution);
-                if(!playUrl.equals(PlayerActivity.this.url)) {
+                if (!playUrl.equals(PlayerActivity.this.url)) {
                     videoView.release();
                     videoView.setUrl(playUrl);
                     videoView.start();
@@ -199,7 +212,9 @@ public class PlayerActivity extends Activity implements Runnable {
 
     protected void onPause() {
         super.onPause();
-        videoView.pause();
+        if (type == 2) {
+            videoView.pause();
+        }
     }
 
     @Override
@@ -211,7 +226,9 @@ public class PlayerActivity extends Activity implements Runnable {
     @Override
     protected void onDestroy() {
         super.onDestroy();
+
         videoView.release();
+        list = null;
     }
 
 
@@ -345,7 +362,9 @@ public class PlayerActivity extends Activity implements Runnable {
                                     videoView.start();
                                 });
                                 videoTransCoding.clear();
-                                new Thread(PlayerActivity.this).start();
+                                if (type == 2) {
+                                    new Thread(PlayerActivity.this).start();
+                                }
 
                             }
                         } catch (JSONException e) {
